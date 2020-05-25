@@ -5,17 +5,26 @@ import os
 class PlotActivity():
     '''PlotActivity plots a experiment with the entered activity'''
 
-    def __init__(self,experiment):
+    def __init__(self,experiment,sensor='acc'):
 
         self.experiment = str(experiment)
+        self.sensor = sensor
 
         if int(self.experiment) < 10:
             self.experiment = '0' + self.experiment
 
 
         for i in os.listdir('../data/RawData/'):
-            if "acc_exp" + self.experiment in i:
-                path = "../data/RawData/" + i
+            
+            if self.sensor == 'acc':
+                
+                if "acc_exp" + self.experiment in i:
+                    path = "../data/RawData/" + i
+            
+            elif self.sensor == "gyro":
+                
+                if "gyro_exp" + self.experiment in i:
+                    path = "../data/RawData/" + i
 
         self.df = pd.read_csv(path, sep=" ", names=['x','y','z'])
         self.df["time_s"] = self.df.index/50
@@ -65,7 +74,11 @@ class PlotActivity():
 
             ax[i].plot(df.index[start:end], df[axis[0]][start:end], ls = '-',c=colors[i])
             ax[i].set_xlabel('sample')
-            ax[i].set_ylabel('acceleration [$g/ms^2$]')
+            
+            if self.sensor == "acc":
+                ax[i].set_ylabel('acceleration [$g/ms^2$]')
+            else:
+                ax[i].set_ylabel('gyro [$rad/seg$]')
             ax[i].set_title("experiment: {} person: {}".format(experiment,person))
 
             if activity != None:
