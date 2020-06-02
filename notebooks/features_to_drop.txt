@@ -1,1 +1,4 @@
-""
+,0,1
+0,gyro_x_FFT,peak_mean_12
+1,gyro_y_FFT,peak_mean_12
+2,gyro_z_FFT,peak_mean_12

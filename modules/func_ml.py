@@ -24,31 +24,14 @@ from sklearn.metrics import confusion_matrix
 import joblib
 
 
-# def find_na(df):
-#
-#     features_to_drop = []
-#
-#     for i in df.columns:
-#
-#         if df[i].isna().sum() > len(df)*0.3:
-#             features_to_drop.append(i)
-#
-#     return features_to_drop
-#
-#
-# def drop_features(df,features_to_drop):
-#
-#     df.drop(features_to_drop, axis = 1, inplace = True)
-#
-#     return df
-
 def train_model(X_train, y_train, clf = "rfc"):
 
     if clf == "svc":
         model = SVC()
 
     elif clf == "rfc":
-        model = RandomForestClassifier()
+        model = RandomForestClassifier(max_depth=50, min_samples_leaf=1,
+                                       min_samples_split=2, n_estimators=100)
 
     model = Pipeline([("imputer", SimpleImputer(fill_value = 0)),
                      ('scaler', StandardScaler()), ("clf", model)])
@@ -63,3 +46,4 @@ def save_model(name, model):
 
     with open(name, 'wb') as file:
         pickle.dump(model, file)
+    print("Model saved to ", name)

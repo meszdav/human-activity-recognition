@@ -202,6 +202,8 @@ def create_block_df(df, window_size, overlap):
     return new_df
 
 def create_block_df_no_overlap(df,window_size):
+    """Create a new df where each block get an id. The blocks are
+    part of the original dataframe. There is no overlap"""
 
     df = df.sort_values(["activity","index"]).reset_index(drop=True)
 
@@ -218,11 +220,15 @@ def most_common(x):
     return c.most_common(1)[0][0]
 
 def create_activity_labels(block_df):
+    """Create activity labels, from the block_df"""
 
     activity_labels = block_df.groupby("block").agg({'activity' : most_common})["activity"]
 
     return activity_labels.to_numpy()
 
+## Aggregate data:
+
+## Functions for aggregation
 def kurtosis_time(x):
 
     return kurtosis(x, fisher=True)
@@ -236,7 +242,7 @@ def crest(x):
     return max(abs(x))/np.sqrt(np.mean(x**2))
 
 def create_aggregated(block_df):
-
+    """Create a aggregated dataframe in time domain"""
     signals = ["acc_x", "acc_y", "acc_z", "gyro_x", "gyro_y", "gyro_z"]
 
     agg_df = block_df.groupby("block").agg({x: ["sum", "mean", "mad",
@@ -248,7 +254,7 @@ def create_aggregated(block_df):
 
     return agg_df
 
-
+#Calculate psd for each block
 def do_fft(df,nperseg):
 
     "Creat a new df with the frequency spectrum of each blocks"
@@ -282,7 +288,7 @@ def do_fft(df,nperseg):
     return new_df
 
 
-
+#Functions for the aggregations in frequency domain
 def peak_sum_all(x):
 
     peaks, _ = signal.find_peaks(x, height=0,)
@@ -361,15 +367,23 @@ def quad_sum(x):
     return np.sum(x**2)
 
 def create_aggregated_freq(fft_df):
+    """Create a aggregated dataframe in frequency domain"""
 
     signals = ['acc_x_FFT', 'acc_y_FFT', 'acc_z_FFT', 'gyro_x_FFT', 'gyro_y_FFT','gyro_z_FFT']
 
     fft_agg_df = fft_df.groupby("block").agg({x: ["sum", "mean", "mad",
                                                   "median", "min", "max",
-                                              rms_80, rms_100, quad_sum] for x in signals })
+                                                  "std", "var", "sem",
+                                                  "skew", "quantile",
+                                                  peak_sum_all, kurtosis_freq, peak_mean_2,
+                                                  peak_mean_6, peak_mean_8, peak_mean_12,
+                                                  rms_10, rms_20, rms_50,
+                                                  rms_80, rms_100, quad_sum] for x in signals })
     return fft_agg_df
 
+
 def create_features(agg_df, fft_agg_df):
+    """Merge the aggregated dataframes"""
 
     features = agg_df.merge(fft_agg_df,on="block")
 
@@ -377,6 +391,7 @@ def create_features(agg_df, fft_agg_df):
 
 
 def find_na(df):
+    """Find the nan values in the features data frame and save these columns to a file"""
 
     features_to_drop = []
 
@@ -391,6 +406,7 @@ def find_na(df):
     return features_to_drop
 
 def drop_features(df,features_to_drop):
+    """Drop the features with more than x=0.3 na values."""
 
     df.drop(features_to_drop, axis = 1, inplace = True)
 
@@ -398,6 +414,7 @@ def drop_features(df,features_to_drop):
 
 
 def create_train_test(features, activity_labels):
+    """Create train test split"""
 
     X_train, X_test, y_train, y_test = train_test_split(features, activity_labels,
                                                     random_state=42, test_size = 0.3, shuffle = True)
