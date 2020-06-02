@@ -3,6 +3,24 @@ from func_ml import *
 import warnings
 warnings.filterwarnings(action='once')
 
+#cut off frequency of the IR filter
+#accelerometer
+acc_cut_off = 12
+#gyrooscope
+gyro_cut_off = 2
+
+#transform data with overlap
+overlap = False
+overlap_size = 0.5
+block_size  = 512
+
+#pwelch nperseg
+nperseg = block_size/2
+
+#save model to disk as ...
+save_as = '../models/har_model_v10.pkl'
+############################################################################
+
 print("Create Labels")
 print('*'*20)
 labels = create_labels()
@@ -18,8 +36,8 @@ labeled_df = add_activity_label(df, labels)
 
 print("Filter data")
 print('*'*20)
-filtered_df_acc = filter_acc(labeled_df,cutoff = 12)
-filtered_df_gyro = filter_gyro(labeled_df,cutoff= 2)
+filtered_df_acc = filter_acc(labeled_df,cutoff = acc_cut_off)
+filtered_df_gyro = filter_gyro(labeled_df,cutoff= gyro_cut_off)
 
 labeled_df = remake_df(filtered_df_acc, filtered_df_gyro, labeled_df)
 
@@ -29,8 +47,11 @@ labeled_df = renindex_df(labeled_df)
 
 print("Add Blocks")
 print('*'*20)
-#block_df = create_block_df(labeled_df,1024,0.5)
-block_df = create_block_df_no_overlap(labeled_df,128)
+
+if overlap:
+    block_df = create_block_df(labeled_df,block_size,overlap_size)
+else:
+    block_df = create_block_df_no_overlap(labeled_df,block_size)
 
 print("Add Activity labels")
 print('*'*20)
@@ -40,7 +61,7 @@ print("Aggregate Data")
 print('*'*20)
 agg_df = create_aggregated(block_df)
 
-fft_df = do_fft(block_df,nperseg=64)
+fft_df = do_fft(block_df,nperseg=nperseg)
 
 fft_agg_df = create_aggregated_freq(fft_df)
 
@@ -52,6 +73,7 @@ features = create_features(agg_df, fft_agg_df)
 print("Drop na-s")
 print('*'*20)
 features_to_drop = find_na(features)
+print(features_to_drop)
 features = drop_features(features,features_to_drop)
 
 
@@ -66,7 +88,7 @@ X_train, X_test, y_train, y_test = create_train_test(features, activity_labels)
 # # X_test = drop_features(X_test,features_to_drop)
 
 start_train = time.time()
-model = init_rfc(X_train, y_train)
+model = train_model(X_train, y_train)
 train_time = round(time.time()-start_train,1)
 
 accuracy = accuracy_score(y_test,model.predict(X_test))
@@ -86,4 +108,4 @@ print(f'Accuracy score: {accuracy}')
 # print('\n')
 # print(f'F1 score: {f1}')
 # print('\n')
-save_model(name='../models/har_model_v07.sav', model=model)
+save_model(name=save_as, model=model)

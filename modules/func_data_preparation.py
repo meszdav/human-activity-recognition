@@ -385,6 +385,9 @@ def find_na(df):
         if df[i].isna().sum() > len(df)*0.3:
             features_to_drop.append(i)
 
+    print("features_to_drop saves to ../notebooks")
+    pd.DataFrame(features_to_drop).to_csv("../notebooks/features_to_drop.txt")
+
     return features_to_drop
 
 def drop_features(df,features_to_drop):

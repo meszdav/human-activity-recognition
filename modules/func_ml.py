@@ -1,6 +1,7 @@
 import pandas as pd
 import seaborn as sns
 import time
+import pickle
 
 import matplotlib.pyplot as plt
 
@@ -23,29 +24,34 @@ from sklearn.metrics import confusion_matrix
 import joblib
 
 
-def find_na(df):
+# def find_na(df):
+#
+#     features_to_drop = []
+#
+#     for i in df.columns:
+#
+#         if df[i].isna().sum() > len(df)*0.3:
+#             features_to_drop.append(i)
+#
+#     return features_to_drop
+#
+#
+# def drop_features(df,features_to_drop):
+#
+#     df.drop(features_to_drop, axis = 1, inplace = True)
+#
+#     return df
 
-    features_to_drop = []
+def train_model(X_train, y_train, clf = "rfc"):
 
-    for i in df.columns:
+    if clf == "svc":
+        model = SVC()
 
-        if df[i].isna().sum() > len(df)*0.3:
-            features_to_drop.append(i)
+    elif clf == "rfc":
+        model = RandomForestClassifier()
 
-    return features_to_drop
-
-
-def drop_features(df,features_to_drop):
-
-    df.drop(features_to_drop, axis = 1, inplace = True)
-
-    return df
-
-def init_rfc(X_train, y_train):
-
-    rfc = RandomForestClassifier()
     model = Pipeline([("imputer", SimpleImputer(fill_value = 0)),
-                     ('scaler', StandardScaler()), ("rfc", rfc)])
+                     ('scaler', StandardScaler()), ("clf", model)])
 
     model.fit(X_train,y_train)
 
@@ -55,6 +61,5 @@ def init_rfc(X_train, y_train):
 def save_model(name, model):
     '''Save the model to disk'''
 
-    filename = name
-    joblib.dump(model, filename)
-    print(f"Model saved to {name}")
+    with open(name, 'wb') as file:
+        pickle.dump(model, file)
