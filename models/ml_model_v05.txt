@@ -1,1 +1,0 @@
-Ml model with rfc, there is no overlapping in the original data. PSd have been calculated for the blocks and not for the activities the accuracy is less..

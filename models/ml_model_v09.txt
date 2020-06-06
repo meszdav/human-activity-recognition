@@ -1,1 +1,0 @@
-Ml model with svc, without overlap 97% accuracy.
