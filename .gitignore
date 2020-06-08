@@ -1,3 +1,6 @@
 #Ignor data folder
 
 data/
+
+Pipfile.lock
+
